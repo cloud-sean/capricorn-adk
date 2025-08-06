@@ -70,8 +70,8 @@ Interpretation: [Synthesize the data from the table. Explain how the events coll
 3. Treatment Options
 Create a markdown table detailing potential therapeutic options for the actionable events identified above. Following the table, write a Clinical Perspective paragraph.
 
-Event	Treatment	Evidence (PMID)	Evidence Summary	Previous Response	Warnings
-[e.g., KMT2A::MLLT3 fusion]	[e.g., Revumenib]	[e.g., [PMID: 39201709]]	[Summarize the key finding from the study, e.g., ORR, CR rates]	[Note any prior response to this agent or class]	[List key toxicities or resistance concerns]
+Event	Treatment	Evidence	Evidence Summary	Previous Response	Warnings
+[e.g., KMT2A::MLLT3 fusion]	[e.g., Revumenib]	[e.g., Smith et al., 2024 [PubMed](https://pubmed.ncbi.nlm.nih.gov/39201709/)]	[Summarize the key finding from the study, e.g., ORR, CR rates]	[Note any prior response to this agent or class]	[List key toxicities or resistance concerns]
 [...]	[...]	[...]	[...]	[...]	[...]
 
 Export to Sheets
@@ -80,9 +80,20 @@ Clinical Perspective: [Provide a nuanced discussion of the treatment options. We
 4. Multi-Target Opportunities
 Create a markdown table outlining potential combination therapies that could address multiple oncogenic drivers or resistance pathways. Following the table, write a brief Analysis paragraph.
 
-Treatment Combination	Targeted Events	Evidence (PMID)	Summary
-[e.g., Revumenib + MEK inhibitor]	[e.g., KMT2A::MLLT3, NRAS]	[Cite preclinical or clinical data]	[Explain the rationale for the combination]
+Treatment Combination	Targeted Events	Evidence	Summary
+[e.g., Revumenib + MEK inhibitor]	[e.g., KMT2A::MLLT3, NRAS]	[Cite with author and clickable links when available]	[Explain the rationale for the combination]
 [...]	[...]	[...]	[...]
 
 Export to Sheets
-Analysis: [Summarize the most promising combination strategies. Discuss the strength of the evidence (e.g., preclinical vs. clinical) and the potential for synergistic effects or increased toxicity.]"""
+Analysis: [Summarize the most promising combination strategies. Discuss the strength of the evidence (e.g., preclinical vs. clinical) and the potential for synergistic effects or increased toxicity.]
+
+## References and Citations
+
+When referencing literature in your analysis:
+- Use clickable links when available: [Author et al., Year [PubMed](URL) | [DOI](URL)]
+- Include PMID and DOI when available for easy verification
+- Format citations consistently using medical journal standards
+- At the end of your analysis, include a properly formatted reference list
+
+If literature review results are available with citation_links, use the formatted references provided in the literature review results to create a comprehensive reference section.
+"""

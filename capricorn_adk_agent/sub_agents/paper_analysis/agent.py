@@ -22,6 +22,7 @@ import logging
 
 from . import prompt
 from .enhanced_prompt import ENHANCED_PAPER_ANALYSIS_PROMPT
+from ...shared_libraries.citation_utils import generate_citation_links, generate_markdown_citation_list
 
 logger = logging.getLogger(__name__)
 
@@ -71,17 +72,33 @@ async def store_analyzed_papers(
     callback_context: callback_context_module.CallbackContext,
     result: Any
 ) -> Optional[types.Content]:
-    """Store analyzed papers in state."""
+    """Store analyzed papers in state with enhanced citation information."""
     
     if result and isinstance(result, dict):
         analyzed_papers = result.get("analyzed_papers", [])
-        callback_context.state["analyzed_papers"] = analyzed_papers
+        
+        # Enhance papers with citation links
+        enhanced_papers = []
+        for i, paper in enumerate(analyzed_papers, 1):
+            # Generate citation links if not already present
+            if "citation_links" not in paper or not paper["citation_links"]:
+                citation_links = generate_citation_links(paper, i)
+                paper["citation_links"] = citation_links
+            
+            enhanced_papers.append(paper)
+        
+        callback_context.state["analyzed_papers"] = enhanced_papers
+        
+        # Generate markdown reference list for easy copy-paste
+        markdown_references = generate_markdown_citation_list(enhanced_papers)
+        callback_context.state["formatted_references"] = markdown_references
         
         # Update search metrics
         if "search_metrics" in callback_context.state:
-            callback_context.state["search_metrics"]["papers_analyzed"] = len(analyzed_papers)
+            callback_context.state["search_metrics"]["papers_analyzed"] = len(enhanced_papers)
+            callback_context.state["search_metrics"]["references_generated"] = len(enhanced_papers)
         
-        logger.info(f"Stored {len(analyzed_papers)} analyzed papers in state")
+        logger.info(f"Stored {len(enhanced_papers)} analyzed papers with citation links in state")
     
     return None
 

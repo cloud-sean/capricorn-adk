@@ -59,6 +59,14 @@ Score each unique paper on these dimensions (1-10 scale):
 - Calculate composite score: (Clinical×0.3 + Quality×0.25 + Recency×0.2 + Actionability×0.25)
 - Select top 5-7 papers with highest composite scores (minimum score 6.0)
 - For selected papers, extract detailed clinical information
+- **Extract citation information**: PMID, DOI, journal reference, and create citation links
+
+**Step 4: Citation Link Generation**
+For each selected paper, create comprehensive citation information:
+- **PubMed URL**: If PMID available, format as https://pubmed.ncbi.nlm.nih.gov/{PMID}/
+- **DOI URL**: If DOI available, format as https://doi.org/{DOI}
+- **Citation Text**: Standard academic citation format
+- **Formatted Reference**: Numbered reference with italicized journal name
 
 ## Output Format:
 
@@ -81,6 +89,12 @@ Return a JSON object with the analysis results:
       "journal": "Journal name",
       "pmid": "12345678",
       "doi": "10.1000/xyz",
+      "citation_links": {
+        "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/12345678/",
+        "doi_url": "https://doi.org/10.1000/xyz",
+        "citation_text": "Author Names. Paper title. Journal name. 2024.",
+        "formatted_reference": "[1] Author Names. Paper title. *Journal name*. 2024. PMID: 12345678. DOI: 10.1000/xyz"
+      },
       "scores": {
         "clinical_relevance": 9,
         "evidence_quality": 8,

@@ -64,6 +64,10 @@ htmlcov/
 
 # Literature review results (generated files)
 literature_review_results.json
+formatted_references.md
+
+# Test files
+test_citations.py
 
 # Temporary files
 *.tmp

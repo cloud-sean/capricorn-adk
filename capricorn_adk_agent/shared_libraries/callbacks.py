@@ -129,25 +129,41 @@ async def aggregate_parallel_results(
 async def save_final_results(
     callback_context: callback_context_module.CallbackContext
 ) -> Optional[types.Content]:
-    """Save final literature review results."""
+    """Save final literature review results with citation information."""
+    
+    analyzed_papers = callback_context.state.get("analyzed_papers", [])
+    formatted_references = callback_context.state.get("formatted_references", "")
     
     results = {
         "patient_case": callback_context.state.get("patient_case"),
         "total_iterations": callback_context.state.get("iteration_count", 1),
         "refinement_history": callback_context.state.get("refinement_history", []),
         "search_metrics": callback_context.state.get("search_metrics", {}),
-        "final_papers": callback_context.state.get("analyzed_papers", []),
-        "queries_used": callback_context.state.get("search_queries", [])
+        "final_papers": analyzed_papers,
+        "queries_used": callback_context.state.get("search_queries", []),
+        "formatted_references": formatted_references,
+        "citation_summary": {
+            "total_references": len(analyzed_papers),
+            "papers_with_pmid": sum(1 for p in analyzed_papers if p.get("citation_links", {}).get("pubmed_url")),
+            "papers_with_doi": sum(1 for p in analyzed_papers if p.get("citation_links", {}).get("doi_url")),
+        }
     }
     
-    # Save to file
+    # Save detailed results to JSON file
     output_file = "literature_review_results.json"
     with open(output_file, "w") as f:
         json.dump(results, f, indent=2)
     
+    # Save markdown references to separate file for easy copy-paste
+    if formatted_references:
+        references_file = "formatted_references.md"
+        with open(references_file, "w") as f:
+            f.write(formatted_references)
+        logger.info(f"Saved formatted references to {references_file}")
+    
     logger.info(
         f"Saved literature review results to {output_file}: "
-        f"{len(results['final_papers'])} papers after {results['total_iterations']} iterations"
+        f"{len(results['final_papers'])} papers with citations after {results['total_iterations']} iterations"
     )
     
     return None
