@@ -1,9 +1,5 @@
-# Improvement and analysis documents (keep local only)
-claude-improvement-targets.md
-gemini-improvement-targets.md
-agent-architecture-optimization.md
-unified-architecture-implementation.md
-architecture.md
+# Miscellaneous files and documentation (keep local only)
+misc/
 
 # Python
 __pycache__/

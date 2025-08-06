@@ -1,34 +1,58 @@
-# Capricorn ADK Agent - Medical Oncology Treatment Advisor
+# Capricorn ADK Agent - Medical Oncology Research Prototype
 
-A medical oncology specialist agent built with Google's Agent Development Kit (ADK) that analyzes genetic and oncological patient information to provide evidence-based treatment recommendations.
+> ⚠️ **IMPORTANT DISCLAIMER**  
+> This is an **experimental research prototype** developed by the Google Cloud Healthcare and Life Sciences Customer Engineering Team. This code sample is intended **solely for research and development purposes** and is **not designed or intended to be deployed in clinical settings** or used for actual patient care. Users acknowledge they bear sole responsibility and liability for any use of this system.
 
 ## Overview
 
-This agent serves as a medical oncology specialist that:
-- Analyzes patient genetic profiles and tumor characteristics
-- Provides structured treatment recommendations using medical terminology
-- Follows evidence-based protocols and current clinical guidelines
-- Considers personalized medicine approaches based on molecular profiling
+This experimental prototype demonstrates the capabilities of Google's Agent Development Kit (ADK) for complex healthcare AI workflows. The system showcases a multi-agent architecture for medical oncology case analysis, featuring:
 
-## Features
+- **Genetic profile analysis** with molecular profiling integration
+- **Evidence-based treatment exploration** following clinical protocols
+- **Literature review coordination** with automated medical research
+- **Multi-agent coordination** patterns for complex healthcare workflows
 
-- **Genetic Analysis**: Processes germline and somatic mutations, biomarkers, and molecular profiles
-- **Treatment Strategy**: Recommends first-line and subsequent therapy options
-- **Clinical Guidelines**: Follows NCCN, ESMO, and ASCO treatment protocols
-- **Precision Medicine**: Incorporates targeted therapies and immunotherapy eligibility
-- **Monitoring Plans**: Provides response assessment and toxicity management protocols
-- **Literature Review**: Comprehensive medical literature search and analysis for complex cases
-  - Generates targeted search queries based on patient-specific factors
-  - Retrieves and analyzes recent medical literature (2022-2024)
-  - Selects top 5 most relevant papers for treatment decision-making
-  - Integrates literature findings into treatment recommendations
+**Research Focus Areas:**
+- Agent orchestration patterns for healthcare AI
+- Multi-modal medical data processing with LLMs
+- Automated literature review and synthesis workflows
+- Clinical decision support system architectures
+
+## Technical Features
+
+This prototype demonstrates several advanced ADK capabilities:
+
+### Core Agent Architecture
+- **Literature Review Coordinator**: Multi-agent orchestration for medical research workflows
+- **Paper Search & Analysis**: Specialized agents for PubMed and medical literature processing
+- **Query Generation**: LLM-powered search query optimization for medical contexts
+- **Parallel Processing**: Concurrent literature analysis and synthesis
+
+### Healthcare AI Workflows
+- **Genetic Profile Processing**: Molecular profiling and biomarker analysis workflows
+- **Treatment Protocol Exploration**: Integration with clinical guideline databases (NCCN, ESMO, ASCO)
+- **Evidence Synthesis**: Automated literature review and recommendation generation
+- **Multi-Modal Data**: Support for clinical, genetic, and imaging data integration
+
+### Google Cloud Integration
+- **Vertex AI**: Powered by Gemini 2.5 Pro for advanced medical reasoning
+- **BigQuery**: Healthcare data analytics and storage patterns
+- **Cloud Healthcare API**: FHIR-compliant data processing demonstrations
 
 ## Prerequisites
 
+**Development Environment:**
 - Python 3.11+
 - [Poetry](https://python-poetry.org/docs/#installation) for dependency management
-- Google Cloud Project with Vertex AI enabled
-- Google Cloud credentials configured
+- Git for version control
+
+**Google Cloud Setup:**
+- Google Cloud Project with the following APIs enabled:
+  - Vertex AI API
+  - Cloud Healthcare API (optional, for FHIR demonstrations)
+  - BigQuery API (optional, for data analytics examples)
+- Google Cloud credentials configured (`gcloud auth application-default login`)
+- Appropriate IAM permissions for Vertex AI model access
 
 ## Setup
 
@@ -56,117 +80,153 @@ This agent serves as a medical oncology specialist that:
    gcloud auth application-default login
    ```
 
-## Usage
+## Running the Prototype
 
-### CLI Mode
-Run the agent in command-line interface:
+### Interactive Development (Recommended)
+Launch the web-based development interface:
+```bash
+poetry run adk web
+```
+Navigate to the provided URL and select the agent from the dropdown menu.
+
+### Command Line Testing
+Run the agent via CLI for automated testing:
 ```bash
 cd capricorn_adk_agent/
 poetry run adk run .
 ```
 
-### Web UI Mode
-Launch the interactive web interface:
-```bash
-poetry run adk web
-```
-Then open your browser to the provided URL and select the agent from the dropdown.
-
-### API Server Mode
-Start a local FastAPI server:
+### API Integration
+Start a local FastAPI server for integration testing:
 ```bash
 poetry run adk api_server capricorn_adk_agent --allow_origins="*"
 ```
-Access the API at `http://127.0.0.1:8000` with docs at `http://127.0.0.1:8000/docs`
+- API endpoint: `http://127.0.0.1:8000`
+- Interactive documentation: `http://127.0.0.1:8000/docs`
 
-## Input Format
+## Research Use Cases
 
-Provide patient information including:
+This prototype supports various healthcare AI research scenarios:
 
-**Genetic Information:**
-- Germline mutations (BRCA1/2, Lynch syndrome genes, p53, etc.)
-- Somatic mutations and tumor markers
-- Microsatellite instability (MSI) status
-- Tumor mutational burden (TMB)
-- PD-L1 expression levels
+### 1. Multi-Agent Coordination Research
+- **Literature Review Orchestration**: Complex workflows with multiple specialized agents
+- **Parallel Processing**: Concurrent analysis of medical literature and data
+- **Agent Communication**: State management and information sharing between agents
 
-**Clinical Information:**
-- Primary tumor type, stage, and histology
-- Metastatic sites and patterns
-- Prior treatment history and responses
-- Performance status and comorbidities
+### 2. Medical NLP and Reasoning
+- **Clinical Text Processing**: Analysis of medical case descriptions and patient histories
+- **Evidence Synthesis**: Automated synthesis of medical literature findings
+- **Structured Output Generation**: Clinical reasoning and recommendation formatting
 
-## Output Format
+### 3. Healthcare Data Integration
+- **Multi-Modal Analysis**: Integration of genetic, clinical, and literature data
+- **FHIR Compatibility**: Healthcare data standard processing demonstrations
+- **Real-Time Processing**: Live literature search and analysis workflows
 
-The agent provides structured recommendations including:
+## Example Research Scenarios
 
-1. **Molecular Profile Summary**: Key genetic alterations and clinical significance
-2. **Treatment Strategy**: Recommended therapies with rationale and alternatives
-3. **Monitoring Plan**: Response assessment and toxicity management
-4. **Additional Considerations**: Genetic counseling, clinical trials, palliative care
-
-## Example Interactions
-
-### Basic Treatment Recommendation
+### Simple Case Analysis
 ```
 Input: "45-year-old female with invasive ductal carcinoma, ER+/PR+/HER2-, BRCA1 mutation, T2N1M0"
 
-Output: 
-- Molecular Profile: BRCA1 pathogenic variant, hormone receptor positive, HER2 negative
-- Treatment Strategy: Neoadjuvant chemotherapy with carboplatin-based regimen, followed by surgery
-- Monitoring: Response assessment q3 cycles, genetic counseling for family
-- Considerations: Fertility preservation discussion, PARP inhibitor maintenance
+Prototype demonstrates:
+- Genetic profile interpretation workflows
+- Treatment protocol database integration
+- Evidence-based reasoning patterns
+- Clinical decision support architectures
 ```
 
-### Complex Case with Literature Review
+### Complex Multi-Agent Literature Review
 ```
-Input: "A now almost 4-year-old female diagnosed with KMT2A-rearranged AML and CNS2 involvement exhibited refractory disease after NOPHO DBH AML 2012 protocol. Post-MEC and ADE, MRD remained at 35% and 53%. Vyxeos-clofarabine therapy reduced MRD to 18%. Third-line FLAG-Mylotarg lowered MRD to 3.5% (flow) and 1% (molecular). After a cord blood HSCT in December 2022, she relapsed 10 months later with 3% MRD and femoral extramedullary disease. After the iLTB discussion, in November 2023 the patient was enrolled in the SNDX5613 trial, receiving revumenib for three months, leading to a reduction in KMT2A MRD to 0.1% by PCR. Subsequently, the patient underwent a second allogeneic HSCT using cord blood with treosulfan, thiotepa, and fludarabine conditioning, followed by revumenib maintenance. In August 2024, 6.5 months after the second HSCT, the patient experienced a bone marrow relapse with 33% blasts. The patient is currently in very good clinical condition."
+Input: Complex pediatric oncology case with rare genetic markers
 
-Expected Agent Response:
-1. Agent recognizes this as a complex, rare case requiring literature review
-2. Invokes Literature Review Coordinator to:
-   - Generate targeted queries: "KMT2A rearranged AML pediatric treatment", "revumenib KMT2A AML clinical trial", "relapsed refractory KMT2A AML second transplant", etc.
-   - Search for recent papers (2022-2024) on KMT2A-rearranged AML treatments
-   - Analyze and select top 5 most relevant papers
-3. Integrates literature findings with case analysis to provide:
-   - Updated treatment options based on recent trials
-   - Novel combination approaches
-   - Evidence-based recommendations for this specific scenario
+Prototype workflow:
+1. Case complexity assessment and routing
+2. Multi-agent literature search coordination
+3. Parallel paper analysis and ranking
+4. Evidence synthesis and integration
+5. Structured recommendation generation
 ```
 
-## Testing
+## Development and Testing
 
-Run unit tests:
+### Running Tests
+Execute the prototype's test suite:
 ```bash
 pytest
 ```
 
-## Deployment
+### Architecture Validation
+Verify the multi-agent system architecture:
+```bash
+python validate_architecture.py
+```
 
-Deploy to Vertex AI Agent Engine:
+### Evaluation Framework
+This prototype includes evaluation capabilities for research assessment:
+```bash
+# Run evaluation tests (when available)
+python eval/test_eval.py
+```
+
+## Deployment (Research Only)
+
+For research environments, deploy to Vertex AI Agent Engine:
 ```bash
 cd deployment/
 python deploy.py --create
 ```
+> **Note**: Deployment is intended only for controlled research environments with appropriate security and privacy safeguards.
 
-## Important Notes
+## Research Ethics and Responsible AI
 
-- **Educational/Research Use Only**: All recommendations are for educational and research purposes
-- **Clinical Validation Required**: Recommendations require multidisciplinary tumor board review
-- **Human Oversight**: Always involve qualified oncologists in treatment decisions
-- **Genetic Counseling**: Recommend professional genetic counseling for hereditary syndromes
+This prototype is developed following Google Cloud's AI principles and responsible AI practices:
 
-## Architecture
+### Ethical Guidelines
+- **Research Purpose Only**: This system is designed exclusively for research and development
+- **No Clinical Deployment**: Not intended for actual patient care or clinical decision-making
+- **Human Oversight Required**: All outputs require expert medical review and validation
+- **Privacy by Design**: Implements data protection and privacy safeguards for research data
 
-This is a single-agent system built with:
-- **Agent Type**: `Agent` with Gemini 2.5 Pro model
-- **Framework**: Google ADK v1.0.0
-- **Deployment**: Vertex AI Agent Engine compatible
+### Limitations and Considerations
+- **Experimental Nature**: This is a research prototype with inherent limitations
+- **Validation Required**: All AI-generated content requires medical expert review
+- **Bias Awareness**: May reflect biases present in training data and medical literature
+- **Scope Limitations**: Focused on oncology research scenarios, not comprehensive medical care
 
-## License
+## Technical Architecture
 
-Apache License 2.0 - See LICENSE file for details.
+**Multi-Agent System Components:**
+- **Root Agent**: Main coordination and patient case analysis
+- **Literature Review Coordinator**: Orchestrates complex literature search workflows
+- **Specialized Sub-Agents**: Paper search, analysis, and query generation agents
+- **Shared Libraries**: Common utilities for quality assessment and callback management
 
-## Contributing
+**Google Cloud Integration:**
+- **Framework**: Google ADK v1.0.0 with Gemini 2.5 Pro
+- **Platform**: Vertex AI Agent Engine compatible
+- **Deployment**: Cloud-native architecture for scalable research applications
 
-Please ensure all medical recommendations follow evidence-based guidelines and include appropriate disclaimers for clinical use.
+## Contributing to Healthcare AI Research
+
+Researchers interested in extending this prototype should:
+
+1. **Follow Responsible AI Principles**: Ensure all modifications adhere to ethical AI development practices
+2. **Maintain Research Focus**: Keep the experimental nature and appropriate disclaimers
+3. **Document Thoroughly**: Provide comprehensive documentation for research reproducibility
+4. **Engage Domain Experts**: Collaborate with healthcare professionals for medical accuracy
+
+## Support and Resources
+
+**Google Cloud Resources:**
+- [Healthcare and Life Sciences on Google Cloud](https://cloud.google.com/solutions/healthcare-life-sciences)
+- [Vertex AI Agent Engine Documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/agents)
+- [Responsible AI Practices](https://ai.google/responsibility/principles/)
+
+**Community:**
+- Report issues or contribute to the Google ADK samples repository
+- Engage with the Google Cloud Healthcare and Life Sciences community
+
+---
+
+*This research prototype is maintained by the Google Cloud Healthcare and Life Sciences Customer Engineering Team as part of ongoing research into AI applications in healthcare workflows.*
