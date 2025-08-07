@@ -59,18 +59,21 @@ def create_query_search_agent(query_obj: Dict[str, Any]) -> Agent:
     """
     
     async def store_search_results(
-        callback_context: callback_context_module.CallbackContext,
-        result: Any
+        callback_context: callback_context_module.CallbackContext
     ) -> Optional[types.Content]:
         """Store search results in parallel_search_results state."""
         
-        if result:
+        # Access output from the agent's execution through state
+        # The output_key f"search_results_query_{query_id}" should be set by the agent
+        search_results = callback_context.state.get(f"search_results_query_{query_id}")
+        
+        if search_results:
             # Initialize parallel_search_results if not exists
             if "parallel_search_results" not in callback_context.state:
                 callback_context.state["parallel_search_results"] = {}
             
             # Store results under query ID
-            callback_context.state["parallel_search_results"][f"query_{query_id}"] = result
+            callback_context.state["parallel_search_results"][f"query_{query_id}"] = search_results
             logger.info(f"Stored search results for query {query_id}: {query_text[:50]}...")
         
         return None
@@ -148,24 +151,50 @@ async def orchestrate_parallel_search(
         logger.warning("No search queries found for parallel search")
         return types.Content(parts=[types.Part(text="No queries available for search")])
     
+    # Ensure queries is a list
+    if not isinstance(queries, list):
+        logger.error(f"Invalid queries format: {type(queries)}")
+        # Use fallback queries
+        queries = [
+            {"id": 1, "query": "KMT2A AML revumenib resistance", "type": "treatment"},
+            {"id": 2, "query": "menin inhibitor relapse HSCT", "type": "clinical"},
+            {"id": 3, "query": "CD33 CD123 AML therapy", "type": "immunotherapy"}
+        ]
+        callback_context.state["search_queries"] = queries
+    
     logger.info(f"Orchestrating parallel search for {len(queries)} queries")
     
     # Create individual search agents for each query
     search_agents = []
+    query_texts = []
+    
     for query_obj in queries:
         if isinstance(query_obj, dict) and "query" in query_obj:
             search_agent = create_query_search_agent(query_obj)
             search_agents.append(search_agent)
+            query_texts.append(query_obj.get("query", "Unknown query"))
+        elif isinstance(query_obj, str):
+            # Handle case where queries are plain strings
+            query_dict = {"id": len(search_agents) + 1, "query": query_obj, "type": "general"}
+            search_agent = create_query_search_agent(query_dict)
+            search_agents.append(search_agent)
+            query_texts.append(query_obj)
     
     # Store the agents for the parallel execution
     callback_context.state["parallel_search_agents"] = search_agents
     
-    return types.Content(
-        parts=[types.Part(
-            text=f"Prepared {len(search_agents)} search agents for parallel execution:\n" +
-                 "\n".join([f"- {q.get('query', 'Unknown query')}" for q in queries])
-        )]
-    )
+    if query_texts:
+        return types.Content(
+            parts=[types.Part(
+                text=f"Prepared {len(search_agents)} search agents for parallel execution:\n" +
+                     "\n".join([f"- {q}" for q in query_texts[:10]]) +
+                     (f"\n... and {len(query_texts) - 10} more" if len(query_texts) > 10 else "")
+            )]
+        )
+    else:
+        return types.Content(
+            parts=[types.Part(text=f"Prepared {len(search_agents)} search agents")]
+        )
 
 
 # The main orchestrator agent

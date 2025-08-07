@@ -20,6 +20,7 @@ from google.genai import types
 import json
 import logging
 from datetime import datetime
+from .parsing_utils import parse_llm_json_output, validate_paper_structure
 
 logger = logging.getLogger(__name__)
 
@@ -79,14 +80,14 @@ async def before_query_generation(
 
 
 async def after_query_generation(
-    callback_context: callback_context_module.CallbackContext,
-    result: Any
+    callback_context: callback_context_module.CallbackContext
 ) -> Optional[types.Content]:
     """Store generated queries in state."""
     
-    if result and hasattr(result, 'get'):
-        queries = result.get("search_queries", [])
-        callback_context.state["search_queries"] = queries
+    # Access output from the agent's execution through state
+    # The output_key "search_queries" should be set by the agent
+    queries = callback_context.state.get("search_queries", [])
+    if queries:
         callback_context.state["search_metrics"]["total_queries"] = len(queries)
         logger.info(f"Generated {len(queries)} search queries")
     
@@ -100,15 +101,46 @@ async def aggregate_parallel_results(
     
     all_papers = []
     search_metrics = callback_context.state.get("search_metrics", {})
+    successful_searches = 0
     
     # Get parallel search results from state
     parallel_results = callback_context.state.get("parallel_search_results", {})
     
-    for query_id, papers in parallel_results.items():
-        if papers and isinstance(papers, list):
-            search_metrics["successful_searches"] += 1
-            search_metrics["papers_found"] += len(papers)
-            all_papers.extend(papers)
+    # Process each query result
+    for query_id, raw_papers in parallel_results.items():
+        if not raw_papers:
+            continue
+            
+        # Parse the raw output if it's a string
+        parsed_papers = parse_llm_json_output(
+            raw_papers,
+            expected_key="papers",
+            context_name=f"search_{query_id}"
+        )
+        
+        # Handle different result formats
+        papers_list = []
+        if isinstance(parsed_papers, list):
+            papers_list = parsed_papers
+        elif isinstance(parsed_papers, dict):
+            # Try common keys where papers might be stored
+            for key in ["papers", "results", "search_results", "items"]:
+                if key in parsed_papers and isinstance(parsed_papers[key], list):
+                    papers_list = parsed_papers[key]
+                    break
+        
+        # Validate and add papers
+        valid_papers = []
+        for i, paper in enumerate(papers_list):
+            validated = validate_paper_structure(paper, i)
+            if validated:
+                valid_papers.append(validated)
+        
+        if valid_papers:
+            successful_searches += 1
+            search_metrics["papers_found"] = search_metrics.get("papers_found", 0) + len(valid_papers)
+            all_papers.extend(valid_papers)
+            logger.debug(f"Query {query_id}: Found {len(valid_papers)} valid papers")
     
     # Remove duplicates based on title
     unique_papers = []
@@ -119,10 +151,12 @@ async def aggregate_parallel_results(
             seen_titles.add(title)
             unique_papers.append(paper)
     
+    # Update state
     callback_context.state["raw_papers"] = unique_papers
+    search_metrics["successful_searches"] = successful_searches
     callback_context.state["search_metrics"] = search_metrics
     
-    logger.info(f"Aggregated {len(unique_papers)} unique papers from {search_metrics['successful_searches']} searches")
+    logger.info(f"Aggregated {len(unique_papers)} unique papers from {successful_searches} searches")
     return None
 
 

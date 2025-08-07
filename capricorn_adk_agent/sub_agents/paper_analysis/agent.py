@@ -17,12 +17,13 @@
 from google.adk.agents import Agent
 from google.adk.agents import callback_context as callback_context_module
 from google.genai import types
-from typing import Optional, Any
+from typing import Optional, Any, List, Dict
 import logging
 
 from . import prompt
 from .enhanced_prompt import ENHANCED_PAPER_ANALYSIS_PROMPT
 from ...shared_libraries.citation_utils import generate_citation_links, generate_markdown_citation_list
+from ...shared_libraries.parsing_utils import parse_llm_json_output, validate_paper_structure
 
 logger = logging.getLogger(__name__)
 
@@ -69,29 +70,64 @@ async def prepare_papers_for_analysis(
 
 
 async def store_analyzed_papers(
-    callback_context: callback_context_module.CallbackContext,
-    result: Any
+    callback_context: callback_context_module.CallbackContext
 ) -> Optional[types.Content]:
     """Store analyzed papers in state with enhanced citation information."""
     
-    if result and isinstance(result, dict):
-        analyzed_papers = result.get("analyzed_papers", [])
-        
+    # Access raw output from the agent's execution through state
+    raw_output = callback_context.state.get("analyzed_papers", [])
+    
+    # Robustly parse the LLM output
+    parsed_data = parse_llm_json_output(
+        raw_output, 
+        expected_key="analyzed_papers",
+        context_name="paper_analysis"
+    )
+    
+    # Ensure we have a list
+    if isinstance(parsed_data, dict) and "analyzed_papers" in parsed_data:
+        analyzed_papers = parsed_data["analyzed_papers"]
+    elif isinstance(parsed_data, list):
+        analyzed_papers = parsed_data
+    else:
+        analyzed_papers = []
+        if parsed_data:
+            logger.warning(f"Unexpected parsed data structure: {type(parsed_data)}")
+    
+    enhanced_papers = []
+    if analyzed_papers:
         # Enhance papers with citation links
-        enhanced_papers = []
         for i, paper in enumerate(analyzed_papers, 1):
-            # Generate citation links if not already present
-            if "citation_links" not in paper or not paper["citation_links"]:
-                citation_links = generate_citation_links(paper, i)
-                paper["citation_links"] = citation_links
+            # Validate paper structure
+            validated_paper = validate_paper_structure(paper, i)
+            if not validated_paper:
+                logger.warning(f"Skipping invalid paper {i}")
+                continue
             
-            enhanced_papers.append(paper)
-        
-        callback_context.state["analyzed_papers"] = enhanced_papers
-        
+            # Generate citation links if not already present
+            if "citation_links" not in validated_paper or not validated_paper.get("citation_links"):
+                try:
+                    citation_links = generate_citation_links(validated_paper, i)
+                    validated_paper["citation_links"] = citation_links
+                except Exception as e:
+                    logger.error(f"Error generating citations for paper {i}: {e}")
+                    validated_paper["citation_links"] = {
+                        "formatted_reference": f"[{i}] {validated_paper.get('title', 'Unknown')}"
+                    }
+            
+            enhanced_papers.append(validated_paper)
+    
+    # Store enhanced/cleaned papers back
+    callback_context.state["analyzed_papers"] = enhanced_papers
+    
+    if enhanced_papers:
         # Generate markdown reference list for easy copy-paste
-        markdown_references = generate_markdown_citation_list(enhanced_papers)
-        callback_context.state["formatted_references"] = markdown_references
+        try:
+            markdown_references = generate_markdown_citation_list(enhanced_papers)
+            callback_context.state["formatted_references"] = markdown_references
+        except Exception as e:
+            logger.error(f"Error generating markdown references: {e}")
+            callback_context.state["formatted_references"] = ""
         
         # Update search metrics
         if "search_metrics" in callback_context.state:
@@ -99,6 +135,8 @@ async def store_analyzed_papers(
             callback_context.state["search_metrics"]["references_generated"] = len(enhanced_papers)
         
         logger.info(f"Stored {len(enhanced_papers)} analyzed papers with citation links in state")
+    else:
+        logger.warning("No valid papers were processed after analysis step")
     
     return None
 

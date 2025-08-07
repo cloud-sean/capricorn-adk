@@ -63,8 +63,8 @@ Score each unique paper on these dimensions (1-10 scale):
 
 **Step 4: Citation Link Generation**
 For each selected paper, create comprehensive citation information:
-- **PubMed URL**: If PMID available, format as https://pubmed.ncbi.nlm.nih.gov/{PMID}/
-- **DOI URL**: If DOI available, format as https://doi.org/{DOI}
+- **PubMed URL**: If PMID available, format as https://pubmed.ncbi.nlm.nih.gov/[PMID]/
+- **DOI URL**: If DOI available, format as https://doi.org/[DOI]
 - **Citation Text**: Standard academic citation format
 - **Formatted Reference**: Numbered reference with italicized journal name
 

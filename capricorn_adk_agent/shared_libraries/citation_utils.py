@@ -21,8 +21,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def generate_citation_links(paper_data: Dict[str, Any], paper_id: int) -> Dict[str, str]:
-    """Generate comprehensive citation links and formatted references for a medical paper."""
+def generate_citation_links(paper_data: Any, paper_id: int) -> Dict[str, str]:
+    """Generate comprehensive citation links and formatted references for a medical paper.
+    
+    Now handles various input types robustly to prevent crashes.
+    """
     
     citation_links = {
         "pubmed_url": "",
@@ -31,13 +34,25 @@ def generate_citation_links(paper_data: Dict[str, Any], paper_id: int) -> Dict[s
         "formatted_reference": ""
     }
     
-    # Extract paper information
-    title = paper_data.get("title", "").strip()
-    authors = paper_data.get("authors", "")
-    year = paper_data.get("year", "")
-    journal = paper_data.get("journal", "").strip()
-    pmid = clean_pmid(paper_data.get("pmid", ""))
-    doi = clean_doi(paper_data.get("doi", ""))
+    # Handle non-dict inputs gracefully
+    if isinstance(paper_data, str):
+        logger.warning(f"Citation utils received string instead of dict for paper {paper_id}")
+        citation_links["citation_text"] = paper_data[:200] if paper_data else "Unknown"
+        citation_links["formatted_reference"] = f"[{paper_id}] {paper_data[:100] if paper_data else 'Unknown'}"
+        return citation_links
+    
+    if not isinstance(paper_data, dict):
+        logger.error(f"Citation utils received unexpected type: {type(paper_data)} for paper {paper_id}")
+        citation_links["formatted_reference"] = f"[{paper_id}] Unknown"
+        return citation_links
+    
+    # Extract paper information safely
+    title = paper_data.get("title", "").strip() if paper_data else ""
+    authors = paper_data.get("authors", "") if paper_data else ""
+    year = paper_data.get("year", "") if paper_data else ""
+    journal = paper_data.get("journal", "").strip() if paper_data else ""
+    pmid = clean_pmid(paper_data.get("pmid", "")) if paper_data else ""
+    doi = clean_doi(paper_data.get("doi", "")) if paper_data else ""
     
     # Generate PubMed URL
     if pmid:
@@ -204,11 +219,15 @@ def generate_markdown_citation_list(analyzed_papers: list) -> str:
     return "\n".join(references)
 
 
-def format_inline_citation(paper_data: Dict[str, Any], paper_id: int) -> str:
+def format_inline_citation(paper_data: Any, paper_id: int) -> str:
     """Generate a short inline citation for use within text."""
     
-    authors = paper_data.get("authors", "")
-    year = paper_data.get("year", "")
+    # Handle non-dict inputs
+    if not isinstance(paper_data, dict):
+        return f"Reference {paper_id}"
+    
+    authors = paper_data.get("authors", "") if paper_data else ""
+    year = paper_data.get("year", "") if paper_data else ""
     
     # Format first author for inline citation
     first_author = ""

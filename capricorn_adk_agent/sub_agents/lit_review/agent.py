@@ -23,7 +23,7 @@ import logging
 
 from . import prompt
 from ..query_generator.agent import enhanced_query_generator_agent
-from ..parallel_search.agent import parallel_search_orchestrator
+from ..parallel_search.fixed_agent import enhanced_parallel_search
 from ..paper_analysis.agent import enhanced_paper_analysis_agent
 from ...shared_libraries.callbacks import (
     initialize_literature_state,
@@ -50,7 +50,7 @@ literature_review_pipeline = SequentialAgent(
     description="Sequential pipeline: Query Generation → Parallel Search → Paper Analysis",
     sub_agents=[
         enhanced_query_generator_agent,   # Generate 5-7 diverse queries
-        parallel_search_orchestrator,     # Execute parallel searches
+        enhanced_parallel_search,         # Execute parallel searches (fixed version)
         enhanced_paper_analysis_agent     # Analyze and score papers
     ],
     before_agent_callback=track_iteration,
