@@ -153,7 +153,14 @@ Prototype workflow:
 ### Running Tests
 Execute the prototype's test suite:
 ```bash
-pytest
+# Run all tests
+poetry run pytest -v
+
+# Run specific test file
+poetry run pytest tests/test_agent_execution.py -v
+
+# Run individual test
+poetry run pytest tests/test_agent_execution.py::test_agent_simple_case -v
 ```
 
 ### Architecture Validation
