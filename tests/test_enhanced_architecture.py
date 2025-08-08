@@ -17,6 +17,7 @@
 import asyncio
 import os
 from unittest.mock import Mock
+import pytest
 
 try:
     # Import the enhanced agents
@@ -42,6 +43,7 @@ class TestEnhancedArchitecture:
         assert enhanced_paper_analysis_agent is not None
         assert lit_review_coordinator is not None
     
+    @pytest.mark.asyncio
     async def test_state_initialization(self):
         """Test that state initialization works correctly."""
         
@@ -64,6 +66,7 @@ class TestEnhancedArchitecture:
         assert result is None
         print("✅ State initialization works")
     
+    @pytest.mark.asyncio
     async def test_quality_check_insufficient_papers(self):
         """Test quality check with insufficient papers."""
         
@@ -79,11 +82,12 @@ class TestEnhancedArchitecture:
         # Should fail due to insufficient papers (< 5)
         result = await check_literature_quality(mock_context)
         
-        assert result is False
+        assert result["status"] == "failure"
         assert "refinement_reason" in mock_context.state
         assert "Insufficient papers" in mock_context.state["refinement_reason"]
         print("✅ Quality check correctly identifies insufficient papers")
     
+    @pytest.mark.asyncio
     async def test_quality_check_sufficient_papers(self):
         """Test quality check with sufficient quality papers."""
         
@@ -102,9 +106,10 @@ class TestEnhancedArchitecture:
         # Should pass with sufficient recent papers
         result = await check_literature_quality(mock_context)
         
-        assert result is True
+        assert result["status"] == "success"
         # No refinement reason should be set
         assert mock_context.state.get("refinement_reason") is None
+        assert mock_context.actions.escalate is True
         print("✅ Quality check correctly accepts sufficient papers")
 
 
@@ -146,10 +151,9 @@ class TestLiteratureReviewCoordinator:
         assert lit_review_coordinator.max_iterations == 3
     
     def test_coordinator_has_quality_check(self):
-        """Test that the coordinator has a quality check tool."""
-        # Should have a loop condition tool for quality checking
-        assert hasattr(lit_review_coordinator, 'loop_condition_tool')
-        assert lit_review_coordinator.loop_condition_tool is not None
+        """Test that the coordinator has a quality check agent."""
+        assert len(lit_review_coordinator.sub_agents) == 2
+        assert lit_review_coordinator.sub_agents[1].name == "quality_check_agent"
 
 
 @pytest.mark.skipif(

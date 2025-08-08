@@ -23,10 +23,10 @@ logger = logging.getLogger(__name__)
 
 async def check_literature_quality(
     tool_context: ToolContext
-) -> bool:
+) -> Dict[str, Any]:
     """
     Check if literature review meets quality standards.
-    Returns True if quality is sufficient, False if refinement is needed.
+    If quality is sufficient, it signals the loop to terminate.
     """
     
     # Get analyzed papers from state
@@ -37,7 +37,7 @@ async def check_literature_quality(
     if len(papers) < min_papers:
         tool_context.state["refinement_reason"] = f"Insufficient papers found ({len(papers)} < {min_papers})"
         logger.info(f"Quality check failed: {tool_context.state['refinement_reason']}")
-        return False
+        return {"status": "failure", "message": tool_context.state["refinement_reason"]}
     
     # Check for recent papers (at least 3 from 2022 or later)
     recent_papers = 0
@@ -55,7 +55,7 @@ async def check_literature_quality(
     if recent_papers < min_recent:
         tool_context.state["refinement_reason"] = f"Insufficient recent literature ({recent_papers} papers from 2022+, need {min_recent})"
         logger.info(f"Quality check failed: {tool_context.state['refinement_reason']}")
-        return False
+        return {"status": "failure", "message": tool_context.state["refinement_reason"]}
     
     # Check average relevance score if available
     if all("relevance_score" in p for p in papers):
@@ -64,15 +64,16 @@ async def check_literature_quality(
         if avg_relevance < min_relevance:
             tool_context.state["refinement_reason"] = f"Low average relevance score ({avg_relevance:.1f} < {min_relevance})"
             logger.info(f"Quality check failed: {tool_context.state['refinement_reason']}")
-            return False
+            return {"status": "failure", "message": tool_context.state["refinement_reason"]}
     
     # Check for diversity in paper types (if type information is available)
     paper_types = set(p.get("type", "unknown") for p in papers)
     if len(paper_types) < 2 and "unknown" not in paper_types:
         tool_context.state["refinement_reason"] = "Insufficient diversity in evidence types"
         logger.info(f"Quality check failed: {tool_context.state['refinement_reason']}")
-        return False
+        return {"status": "failure", "message": tool_context.state["refinement_reason"]}
     
     # All quality checks passed
     logger.info(f"Quality check passed: {len(papers)} papers with {recent_papers} recent papers")
-    return True
+    tool_context.actions.escalate = True
+    return {"status": "success", "message": "Quality standards met, exiting loop."}

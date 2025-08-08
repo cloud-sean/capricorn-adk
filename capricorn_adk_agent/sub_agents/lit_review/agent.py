@@ -14,7 +14,7 @@
 
 """Enhanced Literature Review coordinator with Sequential, Parallel, and Loop agents."""
 
-from google.adk.agents import SequentialAgent, LoopAgent, ParallelAgent
+from google.adk.agents import Agent, SequentialAgent, LoopAgent, ParallelAgent
 from google.adk.tools import FunctionTool
 from google.adk.agents import callback_context as callback_context_module
 from google.genai import types
@@ -58,11 +58,24 @@ literature_review_pipeline = SequentialAgent(
 )
 
 
+# Create the quality check agent
+quality_check_agent = Agent(
+    name="quality_check_agent",
+    model=MODEL,
+    instruction="""You must call the `check_literature_quality` tool.""",
+    tools=[quality_check_tool],
+    include_contents='none',
+)
+
+
 # Step 2: Wrap in Loop for Quality Assurance  
 lit_review_coordinator = LoopAgent(
     name="literature_review_coordinator",
     description="Literature review with iterative refinement until quality standards are met",
-    sub_agents=[literature_review_pipeline],
+    sub_agents=[
+        literature_review_pipeline,
+        quality_check_agent
+    ],
     max_iterations=3,
     before_agent_callback=initialize_literature_state,
     after_agent_callback=save_final_results

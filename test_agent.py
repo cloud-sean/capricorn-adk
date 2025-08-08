@@ -14,7 +14,7 @@ from google.adk import runners
 from capricorn_adk_agent import agent
 
 
-async def test_agent():
+async def run_test_agent():
     """Test the agent with example input."""
     
     # Read the example input
@@ -95,7 +95,7 @@ async def test_agent():
 
 if __name__ == "__main__":
     try:
-        asyncio.run(test_agent())
+        asyncio.run(run_test_agent())
     except KeyboardInterrupt:
         print("\nTest interrupted by user")
     except Exception as e:
