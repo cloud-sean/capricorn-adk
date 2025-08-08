@@ -37,6 +37,20 @@ async def prepare_papers_for_analysis(
     
     # Get all papers from parallel search results
     parallel_results = callback_context.state.get("parallel_search_results", {})
+    
+    # Parse if it's a string (LLM output)
+    if isinstance(parallel_results, str):
+        parallel_results = parse_llm_json_output(
+            parallel_results,
+            expected_key="parallel_search_results",
+            context_name="parallel_search"
+        ) or {}
+    
+    # Ensure it's a dict
+    if not isinstance(parallel_results, dict):
+        logger.warning(f"parallel_search_results is not a dict: {type(parallel_results)}")
+        parallel_results = {}
+    
     all_papers = []
     
     for query_id, results in parallel_results.items():
