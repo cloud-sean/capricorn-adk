@@ -22,6 +22,7 @@ import logging
 
 from . import prompt
 from .enhanced_prompt import ENHANCED_QUERY_GENERATOR_PROMPT
+from ...models import PubMedQuery
 from ...shared_libraries.callbacks import before_query_generation
 from ...shared_libraries.parsing_utils import parse_llm_json_output, validate_query_structure
 from .query_parser import query_generation_tool
@@ -115,7 +116,7 @@ async def parse_and_store_queries(
     return None
 
 
-# Enhanced query generator with multiple query generation
+# Enhanced query generator with structured output
 enhanced_query_generator_agent = Agent(
     model=MODEL,
     name="enhanced_query_generator",
@@ -123,7 +124,8 @@ enhanced_query_generator_agent = Agent(
     instruction=ENHANCED_QUERY_GENERATOR_PROMPT,
     before_agent_callback=before_query_generation,
     after_agent_callback=parse_and_store_queries,
-    output_key="search_queries"
+    output_key="search_queries",
+    # Note: Could use output_schema with list[PubMedQuery] if needed for stricter validation
 )
 
 # Keep original for backward compatibility

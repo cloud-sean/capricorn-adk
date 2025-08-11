@@ -15,6 +15,8 @@
 from google.adk.agents import Agent
 from google.adk.tools import FunctionTool
 from google.adk.tools.agent_tool import AgentTool
+from google.adk.planners import BuiltInPlanner
+from google.genai import types as genai_types
 
 from .prompt import medical_oncology_agent_instruction
 from .sub_agents.lit_review.agent import lit_review_coordinator
@@ -24,6 +26,9 @@ root_agent = Agent(
     name="capricorn_medical_oncology_agent",
     description="Medical oncology specialist that analyzes genetic and oncological patient information to provide treatment recommendations with comprehensive literature review capabilities",
     instruction=medical_oncology_agent_instruction,
+    planner=BuiltInPlanner(
+        thinking_config=genai_types.ThinkingConfig(include_thoughts=True)
+    ),
     tools=[
         AgentTool(agent=lit_review_coordinator),
         # Future: Add custom medical tools like genetic analysis, drug interaction checking, etc.

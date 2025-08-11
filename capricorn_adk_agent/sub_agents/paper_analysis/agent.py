@@ -16,12 +16,15 @@
 
 from google.adk.agents import Agent
 from google.adk.agents import callback_context as callback_context_module
+from google.adk.planners import BuiltInPlanner
 from google.genai import types
+from google.genai import types as genai_types
 from typing import Optional, Any, List, Dict
 import logging
 
 from . import prompt
 from .enhanced_prompt import ENHANCED_PAPER_ANALYSIS_PROMPT
+from ...models import PaperRelevance, LiteratureQualityAssessment
 from ...shared_libraries.citation_utils import generate_citation_links, generate_markdown_citation_list
 from ...shared_libraries.parsing_utils import parse_llm_json_output, validate_paper_structure
 
@@ -155,12 +158,15 @@ async def store_analyzed_papers(
     return None
 
 
-# Enhanced paper analysis agent with scoring
+# Enhanced paper analysis agent with scoring and thinking mode
 enhanced_paper_analysis_agent = Agent(
     model=MODEL,
     name="enhanced_medical_paper_analyzer",
     description="Analyzes and scores medical papers for relevance, then selects the most applicable studies",
     instruction=ENHANCED_PAPER_ANALYSIS_PROMPT,
+    planner=BuiltInPlanner(
+        thinking_config=genai_types.ThinkingConfig(include_thoughts=True)
+    ),
     before_agent_callback=prepare_papers_for_analysis,
     after_agent_callback=store_analyzed_papers,
     output_key="analyzed_papers"

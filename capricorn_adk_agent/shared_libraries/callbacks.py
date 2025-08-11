@@ -19,6 +19,7 @@ from typing import Optional, Dict, Any, List
 from google.genai import types
 import json
 import logging
+import re
 from datetime import datetime
 from .parsing_utils import parse_llm_json_output, validate_paper_structure
 
@@ -158,6 +159,151 @@ async def aggregate_parallel_results(
     
     logger.info(f"Aggregated {len(unique_papers)} unique papers from {successful_searches} searches")
     return None
+
+
+async def collect_literature_sources(
+    callback_context: callback_context_module.CallbackContext
+) -> None:
+    """Collects and organizes literature sources with citation metadata.
+    
+    Processes analyzed papers to extract citation information (DOIs, PMIDs, URLs)
+    and creates a mapping for inline citations. Aggregated source information
+    is stored in callback_context.state.
+    
+    Args:
+        callback_context: The context object providing access to state.
+    """
+    url_to_short_id = callback_context.state.get("url_to_short_id", {})
+    sources = callback_context.state.get("sources", {})
+    id_counter = len(url_to_short_id) + 1
+    
+    analyzed_papers = callback_context.state.get("analyzed_papers", [])
+    
+    for paper in analyzed_papers:
+        # Extract URL (prioritize DOI, then PubMed, then general URL)
+        url = None
+        if paper.get("doi"):
+            url = f"https://doi.org/{paper['doi']}"
+        elif paper.get("pmid"):
+            url = f"https://pubmed.ncbi.nlm.nih.gov/{paper['pmid']}/"
+        elif paper.get("url"):
+            url = paper["url"]
+        
+        if url and url not in url_to_short_id:
+            short_id = f"src-{id_counter}"
+            url_to_short_id[url] = short_id
+            
+            # Extract metadata
+            sources[short_id] = {
+                "short_id": short_id,
+                "title": paper.get("title", "Untitled"),
+                "authors": paper.get("authors", []),
+                "journal": paper.get("journal"),
+                "year": paper.get("year"),
+                "doi": paper.get("doi"),
+                "pmid": paper.get("pmid"),
+                "url": url,
+                "relevance_score": paper.get("relevance_score", 0.5),
+                "key_findings": paper.get("key_findings", []),
+                "clinical_impact": paper.get("clinical_impact", ""),
+                "supported_claims": []
+            }
+            
+            # Add key findings as supported claims
+            for finding in paper.get("key_findings", []):
+                sources[short_id]["supported_claims"].append({
+                    "text_segment": finding,
+                    "confidence": paper.get("relevance_score", 0.5)
+                })
+            
+            id_counter += 1
+    
+    callback_context.state["url_to_short_id"] = url_to_short_id
+    callback_context.state["sources"] = sources
+    
+    logger.info(f"Collected {len(sources)} literature sources with citation metadata")
+
+
+async def citation_replacement_callback(
+    callback_context: callback_context_module.CallbackContext
+) -> types.Content:
+    """Replaces citation tags in a report with formatted citations.
+    
+    Processes 'final_cited_report' from context state, converting tags like
+    `<cite source="src-N"/>` into proper academic citations with links.
+    
+    Args:
+        callback_context: Contains the report and source information.
+    
+    Returns:
+        types.Content: The processed report with formatted citations.
+    """
+    final_report = callback_context.state.get("final_cited_report", "")
+    sources = callback_context.state.get("sources", {})
+    
+    def format_citation(source_info: dict) -> str:
+        """Format source info into academic citation."""
+        authors = source_info.get("authors", [])
+        if authors:
+            if len(authors) > 2:
+                author_str = f"{authors[0]} et al."
+            else:
+                author_str = " & ".join(authors)
+        else:
+            author_str = "Unknown"
+        
+        year = source_info.get("year", "n.d.")
+        title = source_info.get("title", "Untitled")
+        
+        # Create hyperlink to source
+        url = source_info.get("url")
+        if url:
+            return f" [{author_str}, {year}]({url})"
+        else:
+            return f" ({author_str}, {year})"
+    
+    def tag_replacer(match: re.Match) -> str:
+        short_id = match.group(1)
+        if not (source_info := sources.get(short_id)):
+            logger.warning(f"Invalid citation tag found and removed: {match.group(0)}")
+            return ""
+        return format_citation(source_info)
+    
+    # Replace citation tags
+    processed_report = re.sub(
+        r'<cite\s+source\s*=\s*["\']?\s*(src-\d+)\s*["\']?\s*/>',
+        tag_replacer,
+        final_report
+    )
+    
+    # Clean up spacing around punctuation
+    processed_report = re.sub(r"\s+([.,;:])", r"\1", processed_report)
+    
+    # Generate references section
+    if sources:
+        references = "\n\n## References\n\n"
+        for short_id in sorted(sources.keys()):
+            source = sources[short_id]
+            authors = source.get("authors", [])
+            author_str = ", ".join(authors) if authors else "Unknown"
+            year = source.get("year", "n.d.")
+            title = source.get("title", "Untitled")
+            journal = source.get("journal", "")
+            
+            ref_entry = f"- {author_str} ({year}). {title}."
+            if journal:
+                ref_entry += f" *{journal}*."
+            if source.get("doi"):
+                ref_entry += f" DOI: [{source['doi']}](https://doi.org/{source['doi']})"
+            elif source.get("pmid"):
+                ref_entry += f" PMID: [{source['pmid']}](https://pubmed.ncbi.nlm.nih.gov/{source['pmid']}/)"
+            
+            references += ref_entry + "\n"
+        
+        processed_report += references
+    
+    callback_context.state["final_report_with_citations"] = processed_report
+    return types.Content(parts=[types.Part(text=processed_report)])
 
 
 async def save_final_results(
