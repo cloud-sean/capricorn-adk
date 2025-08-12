@@ -22,7 +22,6 @@ from google.genai import types as genai_types
 from typing import Optional, Any, List, Dict
 import logging
 
-from . import prompt
 from .enhanced_prompt import ENHANCED_PAPER_ANALYSIS_PROMPT
 from ...models import PaperRelevance, LiteratureQualityAssessment
 from ...shared_libraries.citation_utils import generate_citation_links, generate_markdown_citation_list

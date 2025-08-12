@@ -17,7 +17,6 @@
 from google.adk.agents import callback_context as callback_context_module
 from typing import Optional, Dict, Any, List
 from google.genai import types
-import json
 import logging
 import re
 from datetime import datetime
@@ -329,20 +328,11 @@ async def save_final_results(
         }
     }
     
-    # Save detailed results to JSON file
-    output_file = "literature_review_results.json"
-    with open(output_file, "w") as f:
-        json.dump(results, f, indent=2)
-    
-    # Save markdown references to separate file for easy copy-paste
-    if formatted_references:
-        references_file = "formatted_references.md"
-        with open(references_file, "w") as f:
-            f.write(formatted_references)
-        logger.info(f"Saved formatted references to {references_file}")
+    # Store results in state instead of writing to files
+    callback_context.state["literature_review_results"] = results
     
     logger.info(
-        f"Saved literature review results to {output_file}: "
+        f"Stored literature review results in state: "
         f"{len(results['final_papers'])} papers with citations after {results['total_iterations']} iterations"
     )
     

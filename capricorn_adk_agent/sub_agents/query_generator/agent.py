@@ -20,7 +20,6 @@ from google.genai import types
 from typing import Optional, Any, List, Dict
 import logging
 
-from . import prompt
 from .enhanced_prompt import ENHANCED_QUERY_GENERATOR_PROMPT
 from ...models import PubMedQuery
 from ...shared_libraries.callbacks import before_query_generation

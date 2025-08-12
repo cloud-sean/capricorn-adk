@@ -459,3 +459,10 @@ validate_agent_hierarchy(root_agent)
 - **Blocking Operations**: Use async/await for I/O operations in tools
 - **Model Overuse**: Don't use expensive models for simple tasks
 - **Tight Coupling**: Keep agents modular and communication through state
+
+## Git Commit Guidelines
+
+When creating git commits for this project:
+- Keep commit messages brief and focused on the changes only
+- Do not mention Claude, AI assistance, or any automated tools in commit messages
+- Focus on what changed, not how or who made the changes
